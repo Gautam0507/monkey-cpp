@@ -7,7 +7,7 @@ using TokenType_t = std::string;
 
 struct TokenTypes {
   static const std::string_view ILLEGAL;
-  static const std::string_view _EOF;
+  static const std::string_view EOF_;
 
   // Identifiers and Literals
   static const std::string_view IDENT;
@@ -34,4 +34,7 @@ struct TokenTypes {
 struct Token {
   TokenType_t Type;
   std::string Literal;
+
+  Token() : Type{}, Literal{} {};
+  Token(std::string_view t, char l) : Type{t}, Literal{std::string{l}} {};
 };

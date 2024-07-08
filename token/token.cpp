@@ -2,7 +2,7 @@
 #include <string_view>
 
 const std::string_view TokenTypes::ILLEGAL{"ILLEGAL"};
-const std::string_view TokenTypes::_EOF{"EOF"};
+const std::string_view TokenTypes::EOF_{"EOF"};
 
 // Identifiers and Literals
 const std::string_view TokenTypes::IDENT{"IDENT"};
