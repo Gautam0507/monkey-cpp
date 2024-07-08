@@ -1,0 +1,51 @@
+#include "lexer.hpp"
+#include "../token/token.hpp"
+#include <cstdio>
+#include <string>
+
+void Lexer::readChar() {
+  if (readPosition >= input.size()) {
+    ch = 0;
+  } else {
+    ch = input[readPosition];
+  }
+  position = readPosition;
+  readPosition++;
+};
+
+Token Lexer::nextToken() {
+  Token token{};
+
+  switch (ch) {
+  case '=':
+    token = Token(TokenTypes::ASSIGN, ch);
+    break;
+  case ';':
+    token = Token(TokenTypes::SEMICOLON, ch);
+    break;
+  case '(':
+    token = Token(TokenTypes::LPAREN, ch);
+    break;
+  case ')':
+    token = Token(TokenTypes::RPAREN, ch);
+    break;
+  case ',':
+    token = Token(TokenTypes::COMMA, ch);
+    break;
+  case '+':
+    token = Token(TokenTypes::PLUS, ch);
+    break;
+  case '{':
+    token = Token(TokenTypes::LBRACE, ch);
+    break;
+  case '}':
+    token = Token(TokenTypes::RBRACE, ch);
+    break;
+  case 0:
+    token.Type = TokenTypes::EOF_;
+    token.Literal = "";
+    break;
+  }
+  readChar();
+  return token;
+}
