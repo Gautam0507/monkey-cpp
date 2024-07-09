@@ -2,6 +2,7 @@
 
 #include <string>
 #include <string_view>
+#include <unordered_map>
 
 using TokenType_t = std::string;
 
@@ -35,6 +36,14 @@ struct Token {
   TokenType_t Type;
   std::string Literal;
 
+  // Map that stores keywords i.e. builtin identifiers.
+  static std::unordered_map<std::string, TokenType_t> keywords;
+
   Token() : Type{}, Literal{} {};
   Token(std::string_view t, char l) : Type{t}, Literal{std::string{l}} {};
+
+  // Checks if an identifier is a keyword sets the Token.Type value
+  void setIdentifier(std::string ident);
 };
+
+// Predefined Identifiers

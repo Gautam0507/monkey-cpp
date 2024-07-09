@@ -45,7 +45,28 @@ Token Lexer::nextToken() {
     token.Type = TokenTypes::EOF_;
     token.Literal = "";
     break;
+  default:
+    if (isLetter(ch)) {
+      token.Literal = readIdentifier();
+      token.setIdentifier(token.Literal);
+      return token;
+    } else {
+      token = Token(TokenTypes::ILLEGAL, ch);
+    }
   }
   readChar();
   return token;
+}
+
+std::string Lexer::readIdentifier() {
+  int pos = position;
+  while (isLetter(ch)) {
+    readChar();
+  }
+  std::string identifier = input.substr(pos, position - pos);
+  return identifier;
+}
+
+bool Lexer::isLetter(char ch) {
+  return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_';
 }
