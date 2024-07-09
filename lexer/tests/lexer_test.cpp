@@ -13,35 +13,23 @@ struct TestToken {
       : expectedType{t}, expectedLiteral{l} {};
 };
 
-TEST(Lexer, SimpleTestNextToken) {
-  std::string input{"=+(){},;"};
-
-  std::vector<TestToken> TestCases = {
-      {TokenTypes::ASSIGN, "="}, {TokenTypes::PLUS, "+"},
-      {TokenTypes::LPAREN, "("}, {TokenTypes::RPAREN, ")"},
-      {TokenTypes::LBRACE, "{"}, {TokenTypes::RBRACE, "}"},
-      {TokenTypes::COMMA, ","},  {TokenTypes::SEMICOLON, ";"},
-      {TokenTypes::EOF_, ""},
-  };
-
-  Lexer l{input};
-
-  for (int i{0}; i < TestCases.size(); i++) {
-    Token token = l.nextToken();
-    TestToken testToken = TestCases[i];
-
-    EXPECT_EQ(token.Type, testToken.expectedType);
-    EXPECT_EQ(token.Literal, testToken.expectedLiteral);
-  }
-};
-
 TEST(Lexer, TestNextToken) {
-  std::string input{"let five = 5; "
-                    "let ten = 10; "
-                    "let add = fn(x,y) {"
-                    "x+y;"
+  std::string input{"let five = 5;"
+                    "let ten = 10;"
+                    "let add = fn(x, y) { "
+                    "   x + y; "
                     "};"
-                    "let result = add(five, ten);"};
+                    "let result = add(five, ten);"
+                    "!-/*5;"
+                    "5 < 10 > 5;"
+                    "if (5 < 10) {"
+                    "   return true;"
+                    "} else {"
+                    "   return false;"
+                    "}"
+                    "10 == 10;"
+                    "10 != 9;"};
+
   std::vector<TestToken> TestCases = {
       {TokenTypes::LET, "let"},     {TokenTypes::IDENT, "five"},
       {TokenTypes::ASSIGN, "="},    {TokenTypes::INT, "5"},
@@ -61,8 +49,25 @@ TEST(Lexer, TestNextToken) {
       {TokenTypes::LPAREN, "("},    {TokenTypes::IDENT, "five"},
       {TokenTypes::COMMA, ","},     {TokenTypes::IDENT, "ten"},
       {TokenTypes::RPAREN, ")"},    {TokenTypes::SEMICOLON, ";"},
-      {TokenTypes::EOF_, ""},
-  };
+      {TokenTypes::BANG, "!"},      {TokenTypes::MINUS, "-"},
+      {TokenTypes::SLASH, "/"},     {TokenTypes::ASTERISK, "*"},
+      {TokenTypes::INT, "5"},       {TokenTypes::SEMICOLON, ";"},
+      {TokenTypes::INT, "5"},       {TokenTypes::LT, "<"},
+      {TokenTypes::INT, "10"},      {TokenTypes::GT, ">"},
+      {TokenTypes::INT, "5"},       {TokenTypes::SEMICOLON, ";"},
+      {TokenTypes::IF, "if"},       {TokenTypes::LPAREN, "("},
+      {TokenTypes::INT, "5"},       {TokenTypes::LT, "<"},
+      {TokenTypes::INT, "10"},      {TokenTypes::RPAREN, ")"},
+      {TokenTypes::LBRACE, "{"},    {TokenTypes::RETURN, "return"},
+      {TokenTypes::TRUE, "true"},   {TokenTypes::SEMICOLON, ";"},
+      {TokenTypes::RBRACE, "}"},    {TokenTypes::ELSE, "else"},
+      {TokenTypes::LBRACE, "{"},    {TokenTypes::RETURN, "return"},
+      {TokenTypes::FALSE, "false"}, {TokenTypes::SEMICOLON, ";"},
+      {TokenTypes::RBRACE, "}"},    {TokenTypes::INT, "10"},
+      {TokenTypes::EQ, "=="},       {TokenTypes::INT, "10"},
+      {TokenTypes::SEMICOLON, ";"}, {TokenTypes::INT, "10"},
+      {TokenTypes::NOT_EQ, "!="},   {TokenTypes::INT, "9"},
+      {TokenTypes::SEMICOLON, ";"}, {TokenTypes::EOF_, ""}};
 
   Lexer l{input};
 

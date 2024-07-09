@@ -17,6 +17,16 @@ struct TokenTypes {
   // Operators
   static const std::string_view ASSIGN;
   static const std::string_view PLUS;
+  static const std::string_view MINUS;
+  static const std::string_view BANG;
+  static const std::string_view ASTERISK;
+  static const std::string_view SLASH;
+
+  static const std::string_view LT;
+  static const std::string_view GT;
+
+  static const std::string_view EQ;
+  static const std::string_view NOT_EQ;
 
   // Delimiters
   static const std::string_view COMMA;
@@ -30,6 +40,11 @@ struct TokenTypes {
   // Keywords
   static const std::string_view FUNCTION;
   static const std::string_view LET;
+  static const std::string_view TRUE;
+  static const std::string_view FALSE;
+  static const std::string_view IF;
+  static const std::string_view ELSE;
+  static const std::string_view RETURN;
 };
 
 struct Token {

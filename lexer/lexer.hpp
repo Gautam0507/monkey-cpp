@@ -29,8 +29,10 @@ public:
 
   // Reads the current number fully and returns the number using the isDigit
   // function
-
   std::string readNumber();
+
+  // Gets the next charachter in the lexer without moving the position forward
+  char peekChar();
 };
 
 // Helper Functions
