@@ -14,8 +14,9 @@ add_subdirectory(./libraries/googletest-1.14.0)
 # Adding all subdirectories 
 add_subdirectory(./lexer)
 add_subdirectory(./token)
+add_subdirectory(./repl)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-# Commands for main.cpp
+# Commands for linking and compiling main.cpp 
 add_executable(compiler main.cpp)
-
+target_include_directories(compiler PRIVATE ./repl)
+target_link_libraries(compiler repl)
