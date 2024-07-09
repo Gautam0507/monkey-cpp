@@ -32,8 +32,8 @@ std::unordered_map<std::string, TokenType_t> Token::keywords{
     {"let", std::string(TokenTypes::LET)}};
 
 void Token::setIdentifier(std::string ident) {
-  if (keywords.count(keywords[ident])) {
-    Type = keywords[ident];
+  if (auto search = keywords.find(ident); search != keywords.end()) {
+    Type = search->second;
   } else {
     Type = TokenTypes::IDENT;
   }

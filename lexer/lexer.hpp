@@ -24,9 +24,18 @@ public:
   // Reads the current identifier and returns the identifier as a string.
   std::string readIdentifier();
 
-  // The function defines all the allowed charachters in an identifier.
-  bool isLetter(char ch);
-
   // Function to skip over whitespace because we do not consider it useful.
   void skipWhitespace();
+
+  // Reads the current number fully and returns the number using the isDigit
+  // function
+
+  std::string readNumber();
 };
+
+// Helper Functions
+// The function defines all the allowed charachters in an identifier.
+bool isLetter(char ch);
+
+// Function to check for integers and numbers
+bool isDigit(char ch);

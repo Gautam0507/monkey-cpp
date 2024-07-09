@@ -1,5 +1,6 @@
 #include "lexer.hpp"
 #include "../token/token.hpp"
+#include <cctype>
 #include <cstdio>
 #include <string>
 
@@ -52,7 +53,12 @@ Token Lexer::nextToken() {
       token.Literal = readIdentifier();
       token.setIdentifier(token.Literal);
       return token;
+    } else if (isDigit(ch)) {
+      token.Type = TokenTypes::INT;
+      token.Literal = readNumber();
+      return token;
     } else {
+
       token = Token(TokenTypes::ILLEGAL, ch);
     }
   }
@@ -61,7 +67,7 @@ Token Lexer::nextToken() {
 }
 
 std::string Lexer::readIdentifier() {
-  int pos = position;
+  int pos{position};
   while (isLetter(ch)) {
     readChar();
   }
@@ -69,12 +75,22 @@ std::string Lexer::readIdentifier() {
   return identifier;
 }
 
-bool Lexer::isLetter(char ch) {
-  return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_';
-}
-
 void Lexer::skipWhitespace() {
   while (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
     readChar();
   }
 }
+
+std::string Lexer::readNumber() {
+  int pos{position};
+  while (isDigit(ch)) {
+    readChar();
+  }
+  return input.substr(pos, position - pos);
+}
+
+bool isLetter(char ch) {
+  return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_';
+}
+
+bool isDigit(char ch) { return ('0' <= ch && ch <= '9'); }
