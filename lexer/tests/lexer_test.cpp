@@ -1,8 +1,6 @@
 #include "../../token/token.hpp"
 #include "../lexer.hpp"
 #include "gtest/gtest.h"
-#include <iostream>
-#include <ostream>
 #include <string>
 #include <string_view>
 #include <vector>

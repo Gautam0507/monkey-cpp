@@ -26,4 +26,7 @@ public:
 
   // The function defines all the allowed charachters in an identifier.
   bool isLetter(char ch);
+
+  // Function to skip over whitespace because we do not consider it useful.
+  void skipWhitespace();
 };

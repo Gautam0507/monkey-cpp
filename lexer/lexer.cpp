@@ -16,6 +16,8 @@ void Lexer::readChar() {
 Token Lexer::nextToken() {
   Token token{};
 
+  skipWhitespace();
+
   switch (ch) {
   case '=':
     token = Token(TokenTypes::ASSIGN, ch);
@@ -69,4 +71,10 @@ std::string Lexer::readIdentifier() {
 
 bool Lexer::isLetter(char ch) {
   return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_';
+}
+
+void Lexer::skipWhitespace() {
+  while (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
+    readChar();
+  }
 }
