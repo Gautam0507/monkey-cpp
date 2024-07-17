@@ -15,6 +15,8 @@ add_subdirectory(./libraries/googletest-1.14.0)
 add_subdirectory(./lexer)
 add_subdirectory(./token)
 add_subdirectory(./repl)
+add_subdirectory(./parser)
+add_subdirectory(./ast)
 
 # Commands for linking and compiling main.cpp 
 add_executable(compiler main.cpp)
