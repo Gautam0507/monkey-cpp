@@ -9,7 +9,7 @@
 #include "../lexer/lexer.hpp"
 #include "../token/token.hpp"
 
-Parser::Parser(Lexer *l) : lexer(l) {
+Parser::Parser(Lexer *l) : lexer(l), errors() {
   // Read 2 tokens
   nextToken();
   nextToken();
@@ -64,19 +64,28 @@ std::unique_ptr<Program> Parser::parseProgram() {
   return std::move(program);
 }
 
-bool Parser::curTokenIs(const std::string_view &type) {
+bool Parser::curTokenIs(std::string_view &type) {
   return CurrentToken.Type == type;
 }
 
-bool Parser::peekTokenIs(const std::string_view &type) {
+bool Parser::peekTokenIs(std::string_view &type) {
   return peekToken.Type == type;
 }
 
-bool Parser::expectPeek(const std::string_view &type) {
+bool Parser::expectPeek(std::string_view &type) {
   if (peekTokenIs(type)) {
     nextToken();
     return true;
   } else {
+    PeekError(type);
     return false;
   }
+}
+
+std::vector<std::string> &Parser::getErrors() { return errors; }
+
+void Parser::PeekError(std::string_view &t) {
+  std::string msg =
+      "Expected next token to be: " + std::string(t) + "got: " + peekToken.Type;
+  errors.push_back(msg);
 }

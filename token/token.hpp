@@ -7,44 +7,44 @@
 using TokenType_t = std::string;
 
 struct TokenTypes {
-  static const std::string_view ILLEGAL;
-  static const std::string_view EOF_;
+  static std::string_view ILLEGAL;
+  static std::string_view EOF_;
 
   // Identifiers and Literals
-  static const std::string_view IDENT;
-  static const std::string_view INT;
+  static std::string_view IDENT;
+  static std::string_view INT;
 
   // Operators
-  static const std::string_view ASSIGN;
-  static const std::string_view PLUS;
-  static const std::string_view MINUS;
-  static const std::string_view BANG;
-  static const std::string_view ASTERISK;
-  static const std::string_view SLASH;
+  static std::string_view ASSIGN;
+  static std::string_view PLUS;
+  static std::string_view MINUS;
+  static std::string_view BANG;
+  static std::string_view ASTERISK;
+  static std::string_view SLASH;
 
-  static const std::string_view LT;
-  static const std::string_view GT;
+  static std::string_view LT;
+  static std::string_view GT;
 
-  static const std::string_view EQ;
-  static const std::string_view NOT_EQ;
+  static std::string_view EQ;
+  static std::string_view NOT_EQ;
 
   // Delimiters
-  static const std::string_view COMMA;
-  static const std::string_view SEMICOLON;
+  static std::string_view COMMA;
+  static std::string_view SEMICOLON;
 
-  static const std::string_view LPAREN;
-  static const std::string_view RPAREN;
-  static const std::string_view LBRACE;
-  static const std::string_view RBRACE;
+  static std::string_view LPAREN;
+  static std::string_view RPAREN;
+  static std::string_view LBRACE;
+  static std::string_view RBRACE;
 
   // Keywords
-  static const std::string_view FUNCTION;
-  static const std::string_view LET;
-  static const std::string_view TRUE;
-  static const std::string_view FALSE;
-  static const std::string_view IF;
-  static const std::string_view ELSE;
-  static const std::string_view RETURN;
+  static std::string_view FUNCTION;
+  static std::string_view LET;
+  static std::string_view TRUE;
+  static std::string_view FALSE;
+  static std::string_view IF;
+  static std::string_view ELSE;
+  static std::string_view RETURN;
 };
 
 struct Token {

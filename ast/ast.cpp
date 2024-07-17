@@ -23,3 +23,6 @@ void LetStatement::statementNode() {}
 Identifier::Identifier(const Token &t, std::string &s) : token{t}, value{s} {};
 std::string Identifier::TokenLiteral() { return token.Literal; }
 void Identifier::expressionNode() {}
+
+void ReturnStatement::statementNode() {}
+std::string ReturnStatement::TokenLiteral() { return token.Literal; }

@@ -48,3 +48,12 @@ public:
   void statementNode() override;
   std::string TokenLiteral() override;
 };
+
+class ReturnStatement : public Statement {
+public:
+  Token token;
+  std::unique_ptr<Expression> returnValue;
+
+  void statementNode() override;
+  std::string TokenLiteral() override;
+};
