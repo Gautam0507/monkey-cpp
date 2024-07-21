@@ -2,16 +2,25 @@
 #include "../ast/ast.hpp"
 #include "../lexer/lexer.hpp"
 #include "../token/token.hpp"
+#include <functional>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
+
+using prefixParseFn = std::function<std::unique_ptr<Expression>()>;
+using infixParseFn =
+    std::function<std::unique_ptr<Expression>(std::unique_ptr<Expression>)>;
+
 class Parser {
 private:
   Lexer *lexer;
   Token CurrentToken;
   Token peekToken;
   std::vector<std::string> errors;
+  std::unordered_map<TokenType_t, prefixParseFn> prefixParseFns;
+  std::unordered_map<TokenType_t, infixParseFn> infixParseFns;
 
 public:
   Parser() = delete;
@@ -23,8 +32,12 @@ public:
   std::unique_ptr<LetStatement> parseLetStatement();
   std::unique_ptr<ReturnStatement> parseReturnStatement();
   std::vector<std::string> &getErrors();
+
   void PeekError(std::string_view &t);
   bool curTokenIs(std::string_view &t);
   bool peekTokenIs(std::string_view &t);
   bool expectPeek(std::string_view &t);
+
+  void registerPrefix(TokenType_t tokenType, prefixParseFn fn);
+  void registerInfix(TokenType_t tokenType, infixParseFn fn);
 };

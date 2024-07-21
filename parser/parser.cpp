@@ -9,7 +9,8 @@
 #include "../lexer/lexer.hpp"
 #include "../token/token.hpp"
 
-Parser::Parser(Lexer *l) : lexer(l), errors() {
+Parser::Parser(Lexer *l)
+    : lexer{l}, errors{}, prefixParseFns{}, infixParseFns{} {
   // Read 2 tokens
   nextToken();
   nextToken();
@@ -100,4 +101,12 @@ void Parser::PeekError(std::string_view &t) {
   std::string msg =
       "Expected next token to be: " + std::string(t) + "got: " + peekToken.Type;
   errors.push_back(msg);
+}
+
+void Parser::registerPrefix(TokenType_t tokenType, prefixParseFn fn) {
+  prefixParseFns[tokenType] = fn;
+}
+
+void Parser::registerInfix(TokenType_t tokenType, infixParseFn fn) {
+  infixParseFns[tokenType] = fn;
 }
