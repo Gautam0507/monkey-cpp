@@ -85,3 +85,15 @@ public:
   std::string TokenLiteral() override;
   std::string String() override;
 };
+
+class PrefixExpression : public Expression {
+public:
+  Token token;
+  std::string operator_;
+  std::unique_ptr<Expression> right;
+  PrefixExpression(Token &, std::string, std::unique_ptr<Expression>);
+
+  void expressionNode() override;
+  std::string TokenLiteral() override;
+  std::string String() override;
+};

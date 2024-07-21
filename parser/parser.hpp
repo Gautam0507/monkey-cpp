@@ -44,11 +44,13 @@ public:
 
   void registerPrefix(TokenType_t tokenType, prefixParseFn fn);
   void registerInfix(TokenType_t tokenType, infixParseFn fn);
+  void noPrefixParseFnError(TokenType_t t);
 
   std::unique_ptr<ExpressionStatement> parseExpressionStatement();
   std::unique_ptr<Expression> parseExpression(Precedence precedence);
   std::unique_ptr<Expression> parseIdentifier();
   std::unique_ptr<Expression> parseIntegerLiteral();
+  std::unique_ptr<Expression> parsePrefixExpression();
 
   Precedence peekPrecedence();
 };

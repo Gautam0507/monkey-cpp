@@ -44,6 +44,10 @@ Parser::Parser(Lexer *l)
                  std::bind(&Parser::parseIdentifier, this));
   registerPrefix(std::string(TokenTypes::INT),
                  std::bind(&Parser::parseIntegerLiteral, this));
+  registerPrefix(std::string(TokenTypes::BANG),
+                 std::bind(&Parser::parsePrefixExpression, this));
+  registerPrefix(std::string(TokenTypes::MINUS),
+                 std::bind(&Parser::parsePrefixExpression, this));
 }
 
 void Parser::nextToken() {
@@ -158,6 +162,7 @@ std::unique_ptr<ExpressionStatement> Parser::parseExpressionStatement() {
 
 std::unique_ptr<Expression> Parser::parseExpression(Precedence precedence) {
   if (!prefixParseFns.count(CurrentToken.Type)) {
+    noPrefixParseFnError(CurrentToken.Type);
     return nullptr;
   }
   auto &&prefix = prefixParseFns[CurrentToken.Type];
@@ -193,4 +198,20 @@ std::unique_ptr<Expression> Parser::parseIdentifier() {
 std::unique_ptr<Expression> Parser::parseIntegerLiteral() {
   int value = std::stoi(CurrentToken.Literal);
   return std::move(std::make_unique<IntegerLiteral>(CurrentToken, value));
+}
+
+void Parser::noPrefixParseFnError(TokenType_t t) {
+  std::string msg = "No prefix parse function for " + t;
+  errors.push_back(msg);
+}
+
+std::unique_ptr<Expression> Parser::parsePrefixExpression() {
+  std::string operator_ = CurrentToken.Literal;
+
+  nextToken();
+
+  std::unique_ptr<Expression> right = parseExpression(Precedence::PREFIX);
+
+  return std::move(std::make_unique<PrefixExpression>(CurrentToken, operator_,
+                                                      std::move(right)));
 }

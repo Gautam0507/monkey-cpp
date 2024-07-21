@@ -72,3 +72,13 @@ IntegerLiteral::IntegerLiteral(Token &t, int v) : token{t}, value{v} {}
 void IntegerLiteral::expressionNode() {}
 std::string IntegerLiteral::TokenLiteral() { return token.Literal; }
 std::string IntegerLiteral::String() { return std::to_string(value); }
+
+PrefixExpression::PrefixExpression(Token &token, std::string operator_,
+                                   std::unique_ptr<Expression> right)
+    : token{token}, operator_{operator_}, right{std::move(right)} {}
+void PrefixExpression::expressionNode() {}
+std::string PrefixExpression::TokenLiteral() { return token.Literal; }
+std::string PrefixExpression::String() {
+  std::string info = "(" + operator_ + right->String() + ")";
+  return info;
+}

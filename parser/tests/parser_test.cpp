@@ -11,6 +11,12 @@ struct testIdentifier {
       : ExpectedIdentifier(expectedIdentifier) {}
 };
 
+struct PrefixTests {
+  std::string input;
+  std::string operator_;
+  int value;
+};
+
 TEST(Parser, LetStatementTest) {
   std::string input{"let x = 5;"
                     "let y = 10;"
@@ -117,4 +123,35 @@ TEST(Parser, TestIntegerLiteralExpresssion) {
   EXPECT_NE(intLit, nullptr);
   EXPECT_EQ(intLit->value, 5);
   EXPECT_EQ(intLit->TokenLiteral(), "5");
+}
+
+TEST(Parser, TestParsingPrefixExpressions) {
+  std::vector<PrefixTests> tests = {
+      {"!5;", "!", 5},
+      {"-15;", "-", 15},
+  };
+
+  for (auto &&test : tests) {
+    Lexer l{test.input};
+    Parser p{&l};
+
+    std::unique_ptr<Program> program = p.parseProgram();
+    EXPECT_NE(program, nullptr);
+    EXPECT_EQ(program->statements.size(), 1);
+
+    ExpressionStatement *stmt =
+        dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+    EXPECT_NE(stmt, nullptr);
+
+    PrefixExpression *prefixExpr =
+        dynamic_cast<PrefixExpression *>(stmt->expression.get());
+    EXPECT_NE(prefixExpr, nullptr);
+    EXPECT_EQ(prefixExpr->operator_, test.operator_);
+
+    IntegerLiteral *intLit =
+        dynamic_cast<IntegerLiteral *>(prefixExpr->right.get());
+    EXPECT_NE(intLit, nullptr);
+    EXPECT_EQ(intLit->value, test.value);
+    EXPECT_EQ(intLit->TokenLiteral(), std::to_string(test.value));
+  }
 }
