@@ -67,11 +67,19 @@ TEST(Parser, TestReturnStatements) {
   Parser p{&l};
 
   std::vector<testIdentifier> tests = {
-      {"x"},
-      {"y"},
-      {"foobar"},
+      {"5"},
+      {"10"},
+      {"993322"},
   };
+
   std::unique_ptr<Program> program = p.parseProgram();
-  ASSERT_NE(program, nullptr);
-  ASSERT_EQ(program->statements.size(), 3);
+  EXPECT_NE(program, nullptr);
+  EXPECT_EQ(program->statements.size(), 3);
+
+  for (int i{0}; i < tests.size(); i++) {
+    ReturnStatement *stmt =
+        dynamic_cast<ReturnStatement *>(program->statements[i].get());
+    EXPECT_NE(stmt, nullptr);
+    EXPECT_EQ(stmt->TokenLiteral(), "return");
+  }
 }

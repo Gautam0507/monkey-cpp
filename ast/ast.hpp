@@ -7,6 +7,7 @@
 class Node {
 public:
   virtual std::string TokenLiteral() = 0;
+  virtual std::string String() = 0;
   virtual ~Node() = default;
 };
 
@@ -26,6 +27,7 @@ class Program : public Node {
 public:
   std::vector<std::unique_ptr<Statement>> statements{};
   std::string TokenLiteral() override;
+  std::string String() override;
 };
 
 class Identifier : public Expression {
@@ -36,6 +38,7 @@ public:
 
   void expressionNode() override;
   std::string TokenLiteral() override;
+  std::string String() override;
 };
 
 class LetStatement : public Statement {
@@ -47,13 +50,27 @@ public:
 
   void statementNode() override;
   std::string TokenLiteral() override;
+  std::string String() override;
 };
 
 class ReturnStatement : public Statement {
 public:
   Token token;
+  ReturnStatement(Token &);
   std::unique_ptr<Expression> returnValue;
 
   void statementNode() override;
   std::string TokenLiteral() override;
+  std::string String() override;
+};
+
+class ExpressionStatement : public Statement {
+public:
+  Token token;
+  std::unique_ptr<Expression> expression;
+  ExpressionStatement(Token &);
+
+  void statementNode() override;
+  std::string TokenLiteral() override;
+  std::string String() override;
 };

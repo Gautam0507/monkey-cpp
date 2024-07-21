@@ -42,9 +42,21 @@ std::unique_ptr<LetStatement> Parser::parseLetStatement() {
   return std::move(stmt);
 }
 
+std::unique_ptr<ReturnStatement> Parser::parseReturnStatement() {
+  std::unique_ptr<ReturnStatement> stmt =
+      std::make_unique<ReturnStatement>(CurrentToken);
+  nextToken();
+  while (curTokenIs(TokenTypes::SEMICOLON)) {
+    nextToken();
+  }
+  return std::move(stmt);
+}
+
 std::unique_ptr<Statement> Parser::parseStatement() {
   if (CurrentToken.Type == TokenTypes::LET) {
     return std::move(parseLetStatement());
+  } else if (CurrentToken.Type == TokenTypes::RETURN) {
+    return std::move(parseReturnStatement());
   } else {
     return nullptr;
   }
