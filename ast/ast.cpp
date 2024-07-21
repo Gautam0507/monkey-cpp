@@ -48,10 +48,13 @@ std::string ReturnStatement::TokenLiteral() { return token.Literal; }
 std::string ReturnStatement::String() {
   std::string info{};
   info += token.Literal + " ";
+
   if (returnValue != nullptr) {
     info += returnValue->String();
   }
+
   info += ";";
+
   return info;
 }
 

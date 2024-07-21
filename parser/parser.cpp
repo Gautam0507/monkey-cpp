@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "ast.hpp"
 #include "token.hpp"
 #include <memory>
 #include <string>
@@ -9,11 +10,38 @@
 #include "../lexer/lexer.hpp"
 #include "../token/token.hpp"
 
+enum class Precedence {
+  LOWEST = 0,
+  EQUALS,
+  LESSGREATER,
+  SUM,
+  PRODUCT,
+  PREFIX,
+  CALL,
+  INDEX,
+};
+
 Parser::Parser(Lexer *l)
     : lexer{l}, errors{}, prefixParseFns{}, infixParseFns{} {
   // Read 2 tokens
   nextToken();
   nextToken();
+
+  precedences = {
+      {std::string(TokenTypes::EQ), Precedence::EQUALS},
+      {std::string(TokenTypes::NOT_EQ), Precedence::EQUALS},
+      {std::string(TokenTypes::LT), Precedence::LESSGREATER},
+      {std::string(TokenTypes::GT), Precedence::LESSGREATER},
+      {std::string(TokenTypes::PLUS), Precedence::SUM},
+      {std::string(TokenTypes::MINUS), Precedence::SUM},
+      {std::string(TokenTypes::SLASH), Precedence::PRODUCT},
+      {std::string(TokenTypes::ASTERISK), Precedence::PRODUCT},
+      {std::string(TokenTypes::LPAREN), Precedence::CALL},
+      {std::string(TokenTypes::LBRACE), Precedence::INDEX},
+  };
+
+  registerPrefix(std::string(TokenTypes::IDENT),
+                 std::bind(&Parser::parseIdentifier, this));
 }
 
 void Parser::nextToken() {
@@ -46,10 +74,15 @@ std::unique_ptr<LetStatement> Parser::parseLetStatement() {
 std::unique_ptr<ReturnStatement> Parser::parseReturnStatement() {
   std::unique_ptr<ReturnStatement> stmt =
       std::make_unique<ReturnStatement>(CurrentToken);
+
   nextToken();
-  while (curTokenIs(TokenTypes::SEMICOLON)) {
+
+  stmt->returnValue = std::move(parseExpression(Precedence::LOWEST));
+
+  if (peekTokenIs(TokenTypes::SEMICOLON)) {
     nextToken();
   }
+
   return std::move(stmt);
 }
 
@@ -59,7 +92,7 @@ std::unique_ptr<Statement> Parser::parseStatement() {
   } else if (CurrentToken.Type == TokenTypes::RETURN) {
     return std::move(parseReturnStatement());
   } else {
-    return nullptr;
+    return std::move(parseExpressionStatement());
   }
 }
 
@@ -109,4 +142,48 @@ void Parser::registerPrefix(TokenType_t tokenType, prefixParseFn fn) {
 
 void Parser::registerInfix(TokenType_t tokenType, infixParseFn fn) {
   infixParseFns[tokenType] = fn;
+}
+
+std::unique_ptr<ExpressionStatement> Parser::parseExpressionStatement() {
+  std::unique_ptr<ExpressionStatement> stmt =
+      std::make_unique<ExpressionStatement>(CurrentToken);
+  stmt->expression = std::move(parseExpression(Precedence::LOWEST));
+  if (peekTokenIs(TokenTypes::SEMICOLON)) {
+    nextToken();
+  }
+  return std::move(stmt);
+}
+
+std::unique_ptr<Expression> Parser::parseExpression(Precedence precedence) {
+  if (!prefixParseFns.count(CurrentToken.Type)) {
+    return nullptr;
+  }
+  auto &&prefix = prefixParseFns[CurrentToken.Type];
+
+  std::unique_ptr<Expression> leftExp = prefix();
+
+  while (!peekTokenIs(TokenTypes::SEMICOLON) && precedence < peekPrecedence()) {
+    if (!infixParseFns.count(peekToken.Type)) {
+      return std::move(leftExp);
+    }
+
+    auto &&infix = infixParseFns[peekToken.Type];
+
+    nextToken();
+
+    leftExp = std::move(infix(std::move(leftExp)));
+  }
+  return std::move(leftExp);
+}
+
+Precedence Parser::peekPrecedence() {
+  if (precedences.find(peekToken.Type) != precedences.end()) {
+    return precedences[peekToken.Type];
+  }
+  return Precedence::LOWEST;
+}
+
+std::unique_ptr<Expression> Parser::parseIdentifier() {
+  return std::move(
+      std::make_unique<Identifier>(CurrentToken, CurrentToken.Literal));
 }

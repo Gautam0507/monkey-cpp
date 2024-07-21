@@ -13,6 +13,8 @@ using prefixParseFn = std::function<std::unique_ptr<Expression>()>;
 using infixParseFn =
     std::function<std::unique_ptr<Expression>(std::unique_ptr<Expression>)>;
 
+enum class Precedence;
+
 class Parser {
 private:
   Lexer *lexer;
@@ -21,6 +23,8 @@ private:
   std::vector<std::string> errors;
   std::unordered_map<TokenType_t, prefixParseFn> prefixParseFns;
   std::unordered_map<TokenType_t, infixParseFn> infixParseFns;
+
+  std::unordered_map<std::string, Precedence> precedences;
 
 public:
   Parser() = delete;
@@ -40,4 +44,10 @@ public:
 
   void registerPrefix(TokenType_t tokenType, prefixParseFn fn);
   void registerInfix(TokenType_t tokenType, infixParseFn fn);
+
+  std::unique_ptr<ExpressionStatement> parseExpressionStatement();
+  std::unique_ptr<Expression> parseExpression(Precedence precedence);
+  std::unique_ptr<Expression> parseIdentifier();
+
+  Precedence peekPrecedence();
 };

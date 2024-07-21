@@ -60,26 +60,40 @@ TEST(Parser, ErrorTest) {
 
 TEST(Parser, TestReturnStatements) {
   std::string input{"return 5;"
-                    " return 10;"
+                    "return 10;"
                     "return 993322;"};
 
   Lexer l{input};
   Parser p{&l};
 
-  std::vector<testIdentifier> tests = {
-      {"5"},
-      {"10"},
-      {"993322"},
-  };
-
   std::unique_ptr<Program> program = p.parseProgram();
   EXPECT_NE(program, nullptr);
   EXPECT_EQ(program->statements.size(), 3);
 
-  for (int i{0}; i < tests.size(); i++) {
+  for (int i{0}; i < 3; i++) {
     ReturnStatement *stmt =
         dynamic_cast<ReturnStatement *>(program->statements[i].get());
     EXPECT_NE(stmt, nullptr);
     EXPECT_EQ(stmt->TokenLiteral(), "return");
   }
+}
+
+TEST(Parser, TestIdentifierExpression) {
+  std::string input{"foobar;"};
+
+  Lexer l{input};
+  Parser p{&l};
+
+  std::unique_ptr<Program> program = p.parseProgram();
+  EXPECT_NE(program, nullptr);
+  EXPECT_EQ(program->statements.size(), 1);
+
+  ExpressionStatement *stmt =
+      dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+  EXPECT_NE(stmt, nullptr);
+
+  Identifier *ident = dynamic_cast<Identifier *>(stmt->expression.get());
+  EXPECT_NE(ident, nullptr);
+  EXPECT_EQ(ident->value, "foobar");
+  EXPECT_EQ(ident->TokenLiteral(), "foobar");
 }
