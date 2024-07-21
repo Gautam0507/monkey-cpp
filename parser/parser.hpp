@@ -48,6 +48,7 @@ public:
   std::unique_ptr<ExpressionStatement> parseExpressionStatement();
   std::unique_ptr<Expression> parseExpression(Precedence precedence);
   std::unique_ptr<Expression> parseIdentifier();
+  std::unique_ptr<Expression> parseIntegerLiteral();
 
   Precedence peekPrecedence();
 };

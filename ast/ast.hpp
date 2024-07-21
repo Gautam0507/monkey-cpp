@@ -74,3 +74,14 @@ public:
   std::string TokenLiteral() override;
   std::string String() override;
 };
+
+class IntegerLiteral : public Expression {
+public:
+  Token token;
+  int value;
+  IntegerLiteral(Token &, int);
+
+  void expressionNode() override;
+  std::string TokenLiteral() override;
+  std::string String() override;
+};

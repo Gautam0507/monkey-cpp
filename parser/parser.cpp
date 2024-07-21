@@ -42,6 +42,8 @@ Parser::Parser(Lexer *l)
 
   registerPrefix(std::string(TokenTypes::IDENT),
                  std::bind(&Parser::parseIdentifier, this));
+  registerPrefix(std::string(TokenTypes::INT),
+                 std::bind(&Parser::parseIntegerLiteral, this));
 }
 
 void Parser::nextToken() {
@@ -186,4 +188,9 @@ Precedence Parser::peekPrecedence() {
 std::unique_ptr<Expression> Parser::parseIdentifier() {
   return std::move(
       std::make_unique<Identifier>(CurrentToken, CurrentToken.Literal));
+}
+
+std::unique_ptr<Expression> Parser::parseIntegerLiteral() {
+  int value = std::stoi(CurrentToken.Literal);
+  return std::move(std::make_unique<IntegerLiteral>(CurrentToken, value));
 }

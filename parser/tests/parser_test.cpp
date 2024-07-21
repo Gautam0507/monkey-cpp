@@ -97,3 +97,24 @@ TEST(Parser, TestIdentifierExpression) {
   EXPECT_EQ(ident->value, "foobar");
   EXPECT_EQ(ident->TokenLiteral(), "foobar");
 }
+
+TEST(Parser, TestIntegerLiteralExpresssion) {
+  std::string input{"5;"};
+
+  Lexer l{input};
+  Parser p{&l};
+
+  std::unique_ptr<Program> program = p.parseProgram();
+  EXPECT_NE(program, nullptr);
+  EXPECT_EQ(program->statements.size(), 1);
+
+  ExpressionStatement *stmt =
+      dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+  EXPECT_NE(stmt, nullptr);
+
+  IntegerLiteral *intLit =
+      dynamic_cast<IntegerLiteral *>(stmt->expression.get());
+  EXPECT_NE(intLit, nullptr);
+  EXPECT_EQ(intLit->value, 5);
+  EXPECT_EQ(intLit->TokenLiteral(), "5");
+}

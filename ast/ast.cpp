@@ -67,3 +67,8 @@ std::string ExpressionStatement::String() {
   }
   return "";
 }
+
+IntegerLiteral::IntegerLiteral(Token &t, int v) : token{t}, value{v} {}
+void IntegerLiteral::expressionNode() {}
+std::string IntegerLiteral::TokenLiteral() { return token.Literal; }
+std::string IntegerLiteral::String() { return std::to_string(value); }
