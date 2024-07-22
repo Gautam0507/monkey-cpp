@@ -17,6 +17,20 @@ struct PrefixTests {
   int value;
 };
 
+bool TestIntegerLiteral(std::unique_ptr<Expression> &exp, int value) {
+  IntegerLiteral *intLit = dynamic_cast<IntegerLiteral *>(exp.get());
+  if (intLit == nullptr) {
+    return false;
+  }
+  if (intLit->value != value) {
+    return false;
+  }
+  if (intLit->TokenLiteral() != std::to_string(value)) {
+    return false;
+  }
+  return true;
+}
+
 std::string PrintErrors(std::vector<std::string> &errors) {
   std::string errorString;
   for (auto &&error : errors) {
@@ -39,7 +53,6 @@ TEST(Parser, LetStatementTest) {
   };
 
   std::unique_ptr<Program> program = p.parseProgram();
-  ASSERT_NE(program, nullptr);
   ASSERT_NE(program, nullptr) << "Program is nullptr";
   ASSERT_EQ(program->statements.size(), 3);
 
@@ -126,11 +139,7 @@ TEST(Parser, TestIntegerLiteralExpresssion) {
       dynamic_cast<ExpressionStatement *>(program->statements[0].get());
   EXPECT_NE(stmt, nullptr);
 
-  IntegerLiteral *intLit =
-      dynamic_cast<IntegerLiteral *>(stmt->expression.get());
-  EXPECT_NE(intLit, nullptr);
-  EXPECT_EQ(intLit->value, 5);
-  EXPECT_EQ(intLit->TokenLiteral(), "5");
+  EXPECT_TRUE(TestIntegerLiteral(stmt->expression, 5));
 }
 
 TEST(Parser, TestParsingPrefixExpressions) {
@@ -156,11 +165,7 @@ TEST(Parser, TestParsingPrefixExpressions) {
     EXPECT_NE(prefixExpr, nullptr);
     EXPECT_EQ(prefixExpr->operator_, test.operator_);
 
-    IntegerLiteral *intLit =
-        dynamic_cast<IntegerLiteral *>(prefixExpr->right.get());
-    EXPECT_NE(intLit, nullptr);
-    EXPECT_EQ(intLit->value, test.value);
-    EXPECT_EQ(intLit->TokenLiteral(), std::to_string(test.value));
+    EXPECT_TRUE(TestIntegerLiteral(prefixExpr->right, test.value));
   }
 }
 
