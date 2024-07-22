@@ -1,9 +1,11 @@
 #include "parser.hpp"
 #include "ast.hpp"
 #include "token.hpp"
+#include <ios>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <sys/socket.h>
 #include <utility>
 #include <vector>
 
@@ -48,6 +50,31 @@ Parser::Parser(Lexer *l)
                  std::bind(&Parser::parsePrefixExpression, this));
   registerPrefix(std::string(TokenTypes::MINUS),
                  std::bind(&Parser::parsePrefixExpression, this));
+
+  registerInfix(
+      std::string(TokenTypes::PLUS),
+      std::bind(&Parser::parseInfixExpression, this, std::placeholders::_1));
+  registerInfix(
+      std::string(TokenTypes::MINUS),
+      std::bind(&Parser::parseInfixExpression, this, std::placeholders::_1));
+  registerInfix(
+      std::string(TokenTypes::SLASH),
+      std::bind(&Parser::parseInfixExpression, this, std::placeholders::_1));
+  registerInfix(
+      std::string(TokenTypes::ASTERISK),
+      std::bind(&Parser::parseInfixExpression, this, std::placeholders::_1));
+  registerInfix(
+      std::string(TokenTypes::EQ),
+      std::bind(&Parser::parseInfixExpression, this, std::placeholders::_1));
+  registerInfix(
+      std::string(TokenTypes::NOT_EQ),
+      std::bind(&Parser::parseInfixExpression, this, std::placeholders::_1));
+  registerInfix(
+      std::string(TokenTypes::LT),
+      std::bind(&Parser::parseInfixExpression, this, std::placeholders::_1));
+  registerInfix(
+      std::string(TokenTypes::GT),
+      std::bind(&Parser::parseInfixExpression, this, std::placeholders::_1));
 }
 
 void Parser::nextToken() {
@@ -214,4 +241,23 @@ std::unique_ptr<Expression> Parser::parsePrefixExpression() {
 
   return std::move(std::make_unique<PrefixExpression>(CurrentToken, operator_,
                                                       std::move(right)));
+}
+
+Precedence Parser::curPrecedence() {
+  if (precedences.find(CurrentToken.Type) != precedences.end()) {
+    return precedences[CurrentToken.Type];
+  }
+  return Precedence::LOWEST;
+}
+
+std::unique_ptr<Expression>
+Parser::parseInfixExpression(std::unique_ptr<Expression> leftExpr) {
+  std::string operator_ = CurrentToken.Literal;
+
+  Precedence precedence = curPrecedence();
+  nextToken();
+  std::unique_ptr<Expression> rightExpr = parseExpression(precedence);
+
+  return std::move(std::make_unique<InfixExpression>(
+      CurrentToken, std::move(leftExpr), operator_, std::move(rightExpr)));
 }

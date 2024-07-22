@@ -82,3 +82,16 @@ std::string PrefixExpression::String() {
   std::string info = "(" + operator_ + right->String() + ")";
   return info;
 }
+
+InfixExpression::InfixExpression(Token &token, std::unique_ptr<Expression> left,
+                                 std::string operator_,
+                                 std::unique_ptr<Expression> right)
+    : token{token}, left{std::move(left)}, operator_{operator_},
+      right{std::move(right)} {}
+void InfixExpression::expressionNode() {}
+std::string InfixExpression::TokenLiteral() { return token.Literal; }
+std::string InfixExpression::String() {
+  std::string info =
+      "(" + left->String() + " " + operator_ + " " + right->String() + ")";
+  return info;
+}

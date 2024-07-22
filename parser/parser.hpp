@@ -51,6 +51,9 @@ public:
   std::unique_ptr<Expression> parseIdentifier();
   std::unique_ptr<Expression> parseIntegerLiteral();
   std::unique_ptr<Expression> parsePrefixExpression();
+  std::unique_ptr<Expression>
+  parseInfixExpression(std::unique_ptr<Expression> leftExpr);
 
   Precedence peekPrecedence();
+  Precedence curPrecedence();
 };

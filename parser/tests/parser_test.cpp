@@ -155,3 +155,76 @@ TEST(Parser, TestParsingPrefixExpressions) {
     EXPECT_EQ(intLit->TokenLiteral(), std::to_string(test.value));
   }
 }
+
+struct InfixTests {
+  std::string input;
+  int leftValue;
+  std::string operator_;
+  int rightValue;
+};
+TEST(Parser, TestInfixExpressionsInt) {
+  std::vector<InfixTests> tests = {
+      {"5 + 5;", 5, "+", 5},   {"5 - 5;", 5, "-", 5},   {"5 * 5;", 5, "*", 5},
+      {"5 / 5;", 5, "/", 5},   {"5 > 5;", 5, ">", 5},   {"5 < 5;", 5, "<", 5},
+      {"5 == 5;", 5, "==", 5}, {"5 != 5;", 5, "!=", 5},
+  };
+  for (auto &&test : tests) {
+    Lexer l{test.input};
+    Parser p{&l};
+
+    std::unique_ptr<Program> program = p.parseProgram();
+    EXPECT_NE(program, nullptr);
+    EXPECT_EQ(program->statements.size(), 1);
+
+    ExpressionStatement *stmt =
+        dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+    EXPECT_NE(stmt, nullptr);
+
+    InfixExpression *infixExpr =
+        dynamic_cast<InfixExpression *>(stmt->expression.get());
+    EXPECT_NE(infixExpr, nullptr);
+    EXPECT_EQ(infixExpr->operator_, test.operator_);
+
+    IntegerLiteral *left =
+        dynamic_cast<IntegerLiteral *>(infixExpr->left.get());
+    EXPECT_NE(left, nullptr);
+    EXPECT_EQ(left->value, test.leftValue);
+    EXPECT_EQ(left->TokenLiteral(), std::to_string(test.leftValue));
+
+    IntegerLiteral *right =
+        dynamic_cast<IntegerLiteral *>(infixExpr->right.get());
+    EXPECT_NE(right, nullptr);
+    EXPECT_EQ(right->value, test.rightValue);
+    EXPECT_EQ(right->TokenLiteral(), std::to_string(test.rightValue));
+  }
+}
+
+TEST(Parser, TestOperatorPrecedenceParsing) {
+  struct OperatorPrecedenceTests {
+    std::string input;
+    std::string expected;
+  };
+  std::vector<OperatorPrecedenceTests> tests{
+      {"-a * b", "((-a) * b)"},
+      {"!-a", "(!(-a))"},
+      {"a + b + c", "((a + b) + c)"},
+      {"a + b - c", "((a + b) - c)"},
+      {"a * b * c", "((a * b) * c)"},
+      {"a * b / c", "((a * b) / c)"},
+      {"a + b / c", "(a + (b / c))"},
+      {"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
+      {"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
+      {"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
+      {"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
+      {"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+  };
+
+  for (auto &&test : tests) {
+    Lexer l{test.input};
+    Parser p{&l};
+
+    std::unique_ptr<Program> program = p.parseProgram();
+    EXPECT_NE(program, nullptr);
+    EXPECT_EQ(program->String(), test.expected);
+  }
+}
