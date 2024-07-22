@@ -17,6 +17,14 @@ struct PrefixTests {
   int value;
 };
 
+std::string PrintErrors(std::vector<std::string> &errors) {
+  std::string errorString;
+  for (auto &&error : errors) {
+    errorString += error + "\n";
+  }
+  return errorString;
+}
+
 TEST(Parser, LetStatementTest) {
   std::string input{"let x = 5;"
                     "let y = 10;"
@@ -32,6 +40,7 @@ TEST(Parser, LetStatementTest) {
 
   std::unique_ptr<Program> program = p.parseProgram();
   ASSERT_NE(program, nullptr);
+  ASSERT_NE(program, nullptr) << "Program is nullptr";
   ASSERT_EQ(program->statements.size(), 3);
 
   for (int i = 0; i < tests.size(); i++) {
@@ -59,9 +68,8 @@ TEST(Parser, ErrorTest) {
 
   std::unique_ptr<Program> program = p.parseProgram();
   std::vector<std::string> errors = p.getErrors();
-  EXPECT_EQ(errors.size(), 0);
-  /*TODO:*/
-  /*  Make sure to finish the test to be able to print parser errors.*/
+  EXPECT_EQ(errors.size(), 0) << "Parser has errors" << std::endl
+                              << PrintErrors(errors);
 }
 
 TEST(Parser, TestReturnStatements) {
