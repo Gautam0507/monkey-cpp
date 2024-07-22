@@ -1,13 +1,17 @@
+#include "parser_test.hpp"
 #include "../../lexer/lexer.hpp"
 #include "../parser.hpp"
 #include "gtest/gtest.h"
+#include <iostream>
 #include <memory>
+#include <regex>
 #include <string>
 #include <vector>
-struct testIdentifier {
+
+struct testIdentifierstruct {
   std::string ExpectedIdentifier;
 
-  testIdentifier(std::string expectedIdentifier)
+  testIdentifierstruct(std::string expectedIdentifier)
       : ExpectedIdentifier(expectedIdentifier) {}
 };
 
@@ -31,12 +35,58 @@ bool TestIntegerLiteral(std::unique_ptr<Expression> &exp, int value) {
   return true;
 }
 
+bool testIdentifier(std::unique_ptr<Expression> &exp, std::string value) {
+  Identifier *ident = dynamic_cast<Identifier *>(exp.get());
+  if (ident == nullptr) {
+    return false;
+  }
+  if (ident->value != value) {
+    return false;
+  }
+  if (ident->TokenLiteral() != value) {
+    return false;
+  }
+  return true;
+}
+
+template <typename T> bool TestLiteralExpression(Expression *exp, T type) {
+  if (std::is_same_v<T, int>) {
+    return TestIntegerLiteral(exp, type);
+  } else if (std::is_same_v<T, std::string>) {
+    return testIdentifier(exp, type);
+  } else if (std::is_same_v<T, bool>) {
+    return TestBooleanLiteral(exp, type);
+  }
+  std::cerr << "Type of exp not handled " << std::endl;
+  return false;
+}
+
 std::string PrintErrors(std::vector<std::string> &errors) {
   std::string errorString;
   for (auto &&error : errors) {
     errorString += error + "\n";
   }
   return errorString;
+}
+
+template <typename T1, typename T2>
+bool testInfixExpression(Expression *expression, T1 left, const std::string &op,
+                         T2 right) {
+  InfixExpression *infixExpression =
+      dynamic_cast<InfixExpression *>(expression);
+  if (infixExpression == nullptr) {
+    return false;
+  }
+  if (!testLiteralExpression(infixExpression->left.get(), left)) {
+    return false;
+  }
+  if (infixExpression->operator_ != op) {
+    return false;
+  }
+  if (!testLiteralExpression(infixExpression->right.get(), right)) {
+    return false;
+  }
+  return true;
 }
 
 TEST(Parser, LetStatementTest) {
@@ -46,7 +96,7 @@ TEST(Parser, LetStatementTest) {
   Lexer l{input};
   Parser p{&l};
 
-  std::vector<testIdentifier> tests = {
+  std::vector<testIdentifierstruct> tests = {
       {"x"},
       {"y"},
       {"foobar"},
@@ -73,7 +123,7 @@ TEST(Parser, ErrorTest) {
   Lexer l{input};
   Parser p{&l};
 
-  std::vector<testIdentifier> tests = {
+  std::vector<testIdentifierstruct> tests = {
       {"x"},
       {"y"},
       {"foobar"},
@@ -240,4 +290,23 @@ TEST(Parser, TestOperatorPrecedenceParsing) {
     EXPECT_NE(program, nullptr);
     EXPECT_EQ(program->String(), test.expected);
   }
+}
+
+TEST(Parser, TestBooleanParseing) {
+  std::string input{"true;"};
+  Lexer l{input};
+  Parser p{&l};
+
+  std::unique_ptr<Program> program = p.parseProgram();
+  EXPECT_NE(program, nullptr);
+  EXPECT_EQ(program->statements.size(), 1);
+
+  ExpressionStatement *stmt =
+      dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+  EXPECT_NE(stmt, nullptr);
+
+  Boolean *boolean = dynamic_cast<Boolean *>(stmt->expression.get());
+  EXPECT_NE(boolean, nullptr);
+  EXPECT_EQ(boolean->value, true);
+  EXPECT_EQ(boolean->TokenLiteral(), "true");
 }

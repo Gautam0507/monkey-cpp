@@ -1,7 +1,6 @@
 #include "parser.hpp"
 #include "ast.hpp"
 #include "token.hpp"
-#include <ios>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -50,6 +49,10 @@ Parser::Parser(Lexer *l)
                  std::bind(&Parser::parsePrefixExpression, this));
   registerPrefix(std::string(TokenTypes::MINUS),
                  std::bind(&Parser::parsePrefixExpression, this));
+  registerPrefix(std::string(TokenTypes::TRUE),
+                 std::bind(&Parser::parseBoolean, this));
+  registerPrefix(std::string(TokenTypes::FALSE),
+                 std::bind(&Parser::parseBoolean, this));
 
   registerInfix(
       std::string(TokenTypes::PLUS),
@@ -260,4 +263,9 @@ Parser::parseInfixExpression(std::unique_ptr<Expression> leftExpr) {
 
   return std::move(std::make_unique<InfixExpression>(
       CurrentToken, std::move(leftExpr), operator_, std::move(rightExpr)));
+}
+
+std::unique_ptr<Expression> Parser::parseBoolean() {
+  return std::move(
+      std::make_unique<Boolean>(CurrentToken, curTokenIs(TokenTypes::TRUE)));
 }

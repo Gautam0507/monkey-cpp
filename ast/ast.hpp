@@ -111,3 +111,14 @@ public:
   std::string TokenLiteral() override;
   std::string String() override;
 };
+
+class Boolean : public Expression {
+public:
+  Token token;
+  bool value;
+
+  Boolean(Token &, bool);
+  void expressionNode() override;
+  std::string TokenLiteral() override;
+  std::string String() override;
+};
