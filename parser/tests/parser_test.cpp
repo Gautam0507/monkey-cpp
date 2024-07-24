@@ -1,10 +1,8 @@
-#include "parser_test.hpp"
 #include "../../lexer/lexer.hpp"
 #include "../parser.hpp"
 #include "gtest/gtest.h"
 #include <iostream>
 #include <memory>
-#include <regex>
 #include <string>
 #include <vector>
 
@@ -21,8 +19,8 @@ struct PrefixTests {
   int value;
 };
 
-bool TestIntegerLiteral(std::unique_ptr<Expression> &exp, int value) {
-  IntegerLiteral *intLit = dynamic_cast<IntegerLiteral *>(exp.get());
+bool TestIntegerLiteral(Expression *exp, int value) {
+  IntegerLiteral *intLit = dynamic_cast<IntegerLiteral *>(exp);
   if (intLit == nullptr) {
     return false;
   }
@@ -35,8 +33,8 @@ bool TestIntegerLiteral(std::unique_ptr<Expression> &exp, int value) {
   return true;
 }
 
-bool testIdentifier(std::unique_ptr<Expression> &exp, std::string value) {
-  Identifier *ident = dynamic_cast<Identifier *>(exp.get());
+bool testIdentifier(Expression *exp, std::string value) {
+  Identifier *ident = dynamic_cast<Identifier *>(exp);
   if (ident == nullptr) {
     return false;
   }
@@ -48,11 +46,24 @@ bool testIdentifier(std::unique_ptr<Expression> &exp, std::string value) {
   }
   return true;
 }
+bool TestBooleanLiteral(Expression *exp, bool value) {
+  Boolean *boolean = dynamic_cast<Boolean *>(exp);
+  if (boolean == nullptr) {
+    return false;
+  }
+  if (boolean->value != value) {
+    return false;
+  }
+  if (boolean->TokenLiteral() != (value ? "true" : "false")) {
+    return false;
+  }
+  return true;
+}
 
 template <typename T> bool TestLiteralExpression(Expression *exp, T type) {
-  if (std::is_same_v<T, int>) {
+  if constexpr (std::is_same_v<T, int>) {
     return TestIntegerLiteral(exp, type);
-  } else if (std::is_same_v<T, std::string>) {
+  } else if constexpr (std::is_same_v<T, std::string>) {
     return testIdentifier(exp, type);
   } else if (std::is_same_v<T, bool>) {
     return TestBooleanLiteral(exp, type);
@@ -189,15 +200,14 @@ TEST(Parser, TestIntegerLiteralExpresssion) {
       dynamic_cast<ExpressionStatement *>(program->statements[0].get());
   EXPECT_NE(stmt, nullptr);
 
-  EXPECT_TRUE(TestIntegerLiteral(stmt->expression, 5));
+  EXPECT_TRUE(TestIntegerLiteral(stmt->expression.get(), 5));
 }
 
-TEST(Parser, TestParsingPrefixExpressions) {
+TEST(Parser, TestParsingPrefixExpressionsint) {
   std::vector<PrefixTests> tests = {
       {"!5;", "!", 5},
       {"-15;", "-", 15},
   };
-
   for (auto &&test : tests) {
     Lexer l{test.input};
     Parser p{&l};
@@ -215,7 +225,42 @@ TEST(Parser, TestParsingPrefixExpressions) {
     EXPECT_NE(prefixExpr, nullptr);
     EXPECT_EQ(prefixExpr->operator_, test.operator_);
 
-    EXPECT_TRUE(TestIntegerLiteral(prefixExpr->right, test.value));
+    EXPECT_TRUE(TestLiteralExpression(prefixExpr->right.get(), test.value));
+  }
+}
+
+TEST(Parser, TestParsingPrefixExpresssionsBool) {
+  struct PrefixBoolTests {
+    std::string input;
+    std::string operator_;
+    bool value;
+  };
+
+  std::vector<PrefixBoolTests> tests = {
+      {"!true;", "!", true},
+      {"!false;", "!", false},
+  };
+  for (auto &&test : tests) {
+    Lexer l{test.input};
+    Parser p{&l};
+
+    std::unique_ptr<Program> program = p.parseProgram();
+    EXPECT_NE(program, nullptr);
+    EXPECT_EQ(program->statements.size(), 1);
+
+    ExpressionStatement *stmt =
+        dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+    EXPECT_NE(stmt, nullptr);
+
+    PrefixExpression *prefixExpr =
+        dynamic_cast<PrefixExpression *>(stmt->expression.get());
+    EXPECT_NE(prefixExpr, nullptr);
+    EXPECT_EQ(prefixExpr->operator_, test.operator_);
+
+    Boolean *boolean = dynamic_cast<Boolean *>(prefixExpr->right.get());
+    EXPECT_NE(boolean, nullptr);
+    EXPECT_EQ(boolean->value, test.value);
+    EXPECT_EQ(boolean->TokenLiteral(), test.value ? "true" : "false");
   }
 }
 
@@ -225,7 +270,7 @@ struct InfixTests {
   std::string operator_;
   int rightValue;
 };
-TEST(Parser, TestInfixExpressionsInt) {
+TEST(Parser, TestInfixExpressions) {
   std::vector<InfixTests> tests = {
       {"5 + 5;", 5, "+", 5},   {"5 - 5;", 5, "-", 5},   {"5 * 5;", 5, "*", 5},
       {"5 / 5;", 5, "/", 5},   {"5 > 5;", 5, ">", 5},   {"5 < 5;", 5, "<", 5},
@@ -259,6 +304,62 @@ TEST(Parser, TestInfixExpressionsInt) {
     EXPECT_NE(right, nullptr);
     EXPECT_EQ(right->value, test.rightValue);
     EXPECT_EQ(right->TokenLiteral(), std::to_string(test.rightValue));
+
+    if (!TestLiteralExpression(infixExpr->left.get(), test.leftValue)) {
+      FAIL();
+    }
+    if (!TestLiteralExpression(infixExpr->right.get(), test.rightValue)) {
+      FAIL();
+    }
+  }
+}
+
+TEST(Parser, TestInfixExpressionsBool) {
+  struct InfixBoolTests {
+    std::string input;
+    bool leftValue;
+    std::string operator_;
+    bool rightValue;
+  };
+
+  std::vector<InfixBoolTests> tests = {
+      {"true == true", true, "==", true},
+      {"true != false", true, "!=", false},
+      {"false == false", false, "==", false},
+  };
+  for (auto &&test : tests) {
+    Lexer l{test.input};
+    Parser p{&l};
+
+    std::unique_ptr<Program> program = p.parseProgram();
+    EXPECT_NE(program, nullptr);
+    EXPECT_EQ(program->statements.size(), 1);
+
+    ExpressionStatement *stmt =
+        dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+    EXPECT_NE(stmt, nullptr);
+
+    InfixExpression *infixExpr =
+        dynamic_cast<InfixExpression *>(stmt->expression.get());
+    EXPECT_NE(infixExpr, nullptr);
+    EXPECT_EQ(infixExpr->operator_, test.operator_);
+
+    Boolean *left = dynamic_cast<Boolean *>(infixExpr->left.get());
+    EXPECT_NE(left, nullptr);
+    EXPECT_EQ(left->value, test.leftValue);
+    EXPECT_EQ(left->TokenLiteral(), test.leftValue ? "true" : "false");
+
+    Boolean *right = dynamic_cast<Boolean *>(infixExpr->right.get());
+    EXPECT_NE(right, nullptr);
+    EXPECT_EQ(right->value, test.rightValue);
+    EXPECT_EQ(right->TokenLiteral(), test.rightValue ? "true" : "false");
+
+    if (!TestLiteralExpression(infixExpr->left.get(), test.leftValue)) {
+      FAIL();
+    }
+    if (!TestLiteralExpression(infixExpr->right.get(), test.rightValue)) {
+      FAIL();
+    }
   }
 }
 
@@ -280,6 +381,16 @@ TEST(Parser, TestOperatorPrecedenceParsing) {
       {"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
       {"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
       {"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+      {"true", "true"},
+      {"false", "false"},
+      {"3 > 5 == false", "((3 > 5) == false)"},
+      {"3 < 5 == true", "((3 < 5) == true)"},
+      {"1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"},
+      {"(5 + 5) * 2", "((5 + 5) * 2)"},
+      {"2 / (5 + 5)", "(2 / (5 + 5))"},
+      {"-(5 + 5)", "(-(5 + 5))"},
+      {"!(true == true)", "(!(true == true))"},
+
   };
 
   for (auto &&test : tests) {
@@ -309,4 +420,122 @@ TEST(Parser, TestBooleanParseing) {
   EXPECT_NE(boolean, nullptr);
   EXPECT_EQ(boolean->value, true);
   EXPECT_EQ(boolean->TokenLiteral(), "true");
+}
+
+TEST(Parser, TestIfExpression) {
+  std::string input{"if (x < y) { x }"};
+  Lexer l{input};
+  Parser p{&l};
+
+  std::unique_ptr<Program> program = p.parseProgram();
+  EXPECT_NE(program, nullptr);
+  EXPECT_EQ(program->statements.size(), 1);
+
+  ExpressionStatement *stmt =
+      dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+  EXPECT_NE(stmt, nullptr);
+
+  IfExpression *ifExpr = dynamic_cast<IfExpression *>(stmt->expression.get());
+  EXPECT_NE(ifExpr, nullptr);
+
+  InfixExpression *infixExpr =
+      dynamic_cast<InfixExpression *>(ifExpr->condition.get());
+  EXPECT_NE(infixExpr, nullptr);
+  EXPECT_EQ(infixExpr->operator_, "<");
+
+  Identifier *ident = dynamic_cast<Identifier *>(infixExpr->left.get());
+  EXPECT_NE(ident, nullptr);
+  EXPECT_EQ(ident->value, "x");
+
+  ident = dynamic_cast<Identifier *>(infixExpr->right.get());
+  EXPECT_NE(ident, nullptr);
+  EXPECT_EQ(ident->value, "y");
+
+  BlockStatement *blockStmt =
+      dynamic_cast<BlockStatement *>(ifExpr->consequence.get());
+  EXPECT_NE(blockStmt, nullptr);
+  EXPECT_EQ(blockStmt->statements.size(), 1);
+
+  ExpressionStatement *blockStmtExpr =
+      dynamic_cast<ExpressionStatement *>(blockStmt->statements[0].get());
+  EXPECT_NE(blockStmtExpr, nullptr);
+
+  ident = dynamic_cast<Identifier *>(blockStmtExpr->expression.get());
+  EXPECT_NE(ident, nullptr);
+  EXPECT_EQ(ident->value, "x");
+}
+
+TEST(Parser, TestFunctionLiteralParsing) {
+  std::string input{"fn(x, y) { x + y; }"};
+  Lexer l{input};
+  Parser p{&l};
+
+  std::unique_ptr<Program> program = p.parseProgram();
+  EXPECT_NE(program, nullptr);
+  EXPECT_EQ(program->statements.size(), 1);
+
+  ExpressionStatement *stmt =
+      dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+  EXPECT_NE(stmt, nullptr);
+
+  FunctionLiteral *fn = dynamic_cast<FunctionLiteral *>(stmt->expression.get());
+  EXPECT_NE(fn, nullptr);
+
+  EXPECT_EQ(fn->parameters.size(), 2);
+  EXPECT_EQ(fn->parameters[0]->value, "x");
+  EXPECT_EQ(fn->parameters[1]->value, "y");
+
+  BlockStatement *blockStmt = dynamic_cast<BlockStatement *>(fn->body.get());
+  EXPECT_NE(blockStmt, nullptr);
+  EXPECT_EQ(blockStmt->statements.size(), 1);
+
+  ExpressionStatement *blockStmtExpr =
+      dynamic_cast<ExpressionStatement *>(blockStmt->statements[0].get());
+  EXPECT_NE(blockStmtExpr, nullptr);
+
+  InfixExpression *infixExpr =
+      dynamic_cast<InfixExpression *>(blockStmtExpr->expression.get());
+  EXPECT_NE(infixExpr, nullptr);
+
+  Identifier *identLeft = dynamic_cast<Identifier *>(infixExpr->left.get());
+  EXPECT_NE(identLeft, nullptr);
+  EXPECT_EQ(identLeft->value, "x");
+
+  Identifier *identRight = dynamic_cast<Identifier *>(infixExpr->right.get());
+  EXPECT_NE(identRight, nullptr);
+  EXPECT_EQ(identRight->value, "y");
+}
+
+TEST(Parser, TestFunctionParameterParsing) {
+  struct FunctionParameterTests {
+    std::string input;
+    std::vector<std::string> expectedParams;
+  };
+
+  std::vector<FunctionParameterTests> tests = {
+      {"fn() {};", {}},
+      {"fn(x) {};", {"x"}},
+      {"fn(x, y, z) {};", {"x", "y", "z"}},
+  };
+
+  for (auto &&test : tests) {
+    Lexer l{test.input};
+    Parser p{&l};
+
+    std::unique_ptr<Program> program = p.parseProgram();
+    EXPECT_NE(program, nullptr);
+
+    ExpressionStatement *stmt =
+        dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+    EXPECT_NE(stmt, nullptr);
+
+    FunctionLiteral *fn =
+        dynamic_cast<FunctionLiteral *>(stmt->expression.get());
+    EXPECT_NE(fn, nullptr);
+
+    EXPECT_EQ(fn->parameters.size(), test.expectedParams.size());
+    for (int i{0}; i < test.expectedParams.size(); i++) {
+      EXPECT_EQ(fn->parameters[i]->value, test.expectedParams[i]);
+    }
+  }
 }

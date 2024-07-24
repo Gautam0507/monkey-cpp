@@ -53,6 +53,12 @@ Parser::Parser(Lexer *l)
                  std::bind(&Parser::parseBoolean, this));
   registerPrefix(std::string(TokenTypes::FALSE),
                  std::bind(&Parser::parseBoolean, this));
+  registerPrefix(std::string(TokenTypes::LPAREN),
+                 std::bind(&Parser::parseGroupedExpression, this));
+  registerPrefix(std::string(TokenTypes::IF),
+                 std::bind(&Parser::parseIfExpression, this));
+  registerPrefix(std::string(TokenTypes::FUNCTION),
+                 std::bind(&Parser::parseFunctionLiteral, this));
 
   registerInfix(
       std::string(TokenTypes::PLUS),
@@ -268,4 +274,113 @@ Parser::parseInfixExpression(std::unique_ptr<Expression> leftExpr) {
 std::unique_ptr<Expression> Parser::parseBoolean() {
   return std::move(
       std::make_unique<Boolean>(CurrentToken, curTokenIs(TokenTypes::TRUE)));
+}
+
+std::unique_ptr<Expression> Parser::parseGroupedExpression() {
+  nextToken();
+
+  std::unique_ptr<Expression> exp = parseExpression(Precedence::LOWEST);
+
+  if (!expectPeek(TokenTypes::RPAREN)) {
+    return nullptr;
+  }
+
+  return std::move(exp);
+}
+
+std::unique_ptr<Expression> Parser::parseIfExpression() {
+  std::unique_ptr<IfExpression> exp =
+      std::make_unique<IfExpression>(CurrentToken);
+
+  if (!expectPeek(TokenTypes::LPAREN)) {
+    return nullptr;
+  }
+
+  nextToken();
+
+  exp->condition = std::move(parseExpression(Precedence::LOWEST));
+
+  if (!expectPeek(TokenTypes::RPAREN)) {
+    return nullptr;
+  }
+
+  if (!expectPeek(TokenTypes::LBRACE)) {
+    return nullptr;
+  }
+  exp->consequence = std::move(parseBlockStatement());
+
+  if (peekTokenIs(TokenTypes::ELSE)) {
+    nextToken();
+
+    if (!expectPeek(TokenTypes::LBRACE)) {
+      return nullptr;
+    }
+
+    exp->alternative = std::move(parseBlockStatement());
+  }
+  return std::move(exp);
+}
+
+std::unique_ptr<BlockStatement> Parser::parseBlockStatement() {
+  std::unique_ptr<BlockStatement> block =
+      std::make_unique<BlockStatement>(CurrentToken);
+
+  nextToken();
+
+  while (!curTokenIs(TokenTypes::RBRACE) && !curTokenIs(TokenTypes::EOF_)) {
+    std::unique_ptr<Statement> stmt = parseStatement();
+    if (stmt != nullptr) {
+      block->statements.push_back(std::move(stmt));
+    }
+    nextToken();
+  }
+  return std::move(block);
+}
+
+std::unique_ptr<Expression> Parser::parseFunctionLiteral() {
+  std::unique_ptr<FunctionLiteral> lit =
+      std::make_unique<FunctionLiteral>(CurrentToken);
+
+  if (!expectPeek(TokenTypes::LPAREN)) {
+    return nullptr;
+  }
+
+  lit->parameters = std::move(parseFunctionParameters());
+
+  if (!expectPeek(TokenTypes::LBRACE)) {
+    return nullptr;
+  }
+
+  lit->body = std::move(parseBlockStatement());
+
+  return std::move(lit);
+}
+
+std::vector<std::unique_ptr<Identifier>> Parser::parseFunctionParameters() {
+  std::vector<std::unique_ptr<Identifier>> identifiers;
+
+  if (peekTokenIs(TokenTypes::RPAREN)) {
+    nextToken();
+    return identifiers;
+  }
+
+  nextToken();
+
+  std::unique_ptr<Identifier> ident =
+      std::make_unique<Identifier>(CurrentToken, CurrentToken.Literal);
+  identifiers.push_back(std::move(ident));
+
+  while (peekTokenIs(TokenTypes::COMMA)) {
+    nextToken();
+    nextToken();
+    std::unique_ptr<Identifier> ident =
+        std::make_unique<Identifier>(CurrentToken, CurrentToken.Literal);
+    identifiers.push_back(std::move(ident));
+  }
+
+  if (!expectPeek(TokenTypes::RPAREN)) {
+    return {};
+  }
+
+  return identifiers;
 }

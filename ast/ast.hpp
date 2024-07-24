@@ -122,3 +122,45 @@ public:
   std::string TokenLiteral() override;
   std::string String() override;
 };
+
+class BlockStatement : public Statement {
+public:
+  Token token;
+  std::vector<std::unique_ptr<Statement>> statements;
+
+  BlockStatement(Token &);
+  BlockStatement(Token &, std::vector<std::unique_ptr<Statement>> &);
+  void statementNode() override;
+  std::string TokenLiteral() override;
+  std::string String() override;
+};
+
+class IfExpression : public Expression {
+public:
+  Token token;
+  std::unique_ptr<Expression> condition;
+  std::unique_ptr<BlockStatement> consequence;
+  std::unique_ptr<BlockStatement> alternative;
+
+  IfExpression(Token &);
+  IfExpression(Token &, std::unique_ptr<Expression>,
+               std::unique_ptr<BlockStatement>);
+  IfExpression(Token &, std::unique_ptr<Expression>,
+               std::unique_ptr<BlockStatement>,
+               std::unique_ptr<BlockStatement>);
+  void expressionNode() override;
+  std::string TokenLiteral() override;
+  std::string String() override;
+};
+
+class FunctionLiteral : public Expression {
+public:
+  Token token;
+  std::vector<std::unique_ptr<Identifier>> parameters;
+  std::unique_ptr<BlockStatement> body;
+
+  FunctionLiteral(Token &);
+  void expressionNode() override;
+  std::string TokenLiteral() override;
+  std::string String() override;
+};

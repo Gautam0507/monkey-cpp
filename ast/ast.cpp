@@ -100,3 +100,58 @@ Boolean::Boolean(Token &token, bool value) : token{token}, value{value} {}
 void Boolean::expressionNode() {}
 std::string Boolean::TokenLiteral() { return token.Literal; }
 std::string Boolean::String() { return token.Literal; }
+
+IfExpression::IfExpression(Token &token) : token{token} {}
+IfExpression::IfExpression(Token &token, std::unique_ptr<Expression> condition,
+                           std::unique_ptr<BlockStatement> consequence)
+    : token{token}, condition{std::move(condition)},
+      consequence{std::move(consequence)} {}
+IfExpression::IfExpression(Token &token, std::unique_ptr<Expression> condition,
+                           std::unique_ptr<BlockStatement> consequence,
+                           std::unique_ptr<BlockStatement> alternative)
+    : token{token}, condition{std::move(condition)},
+      consequence{std::move(consequence)}, alternative{std::move(alternative)} {
+}
+
+void IfExpression::expressionNode() {}
+std::string IfExpression::TokenLiteral() { return token.Literal; }
+std::string IfExpression::String() {
+  std::string info = "if" + condition->String() + " " + consequence->String();
+  if (alternative != nullptr) {
+    info += "else " + alternative->String();
+  }
+  return info;
+}
+
+// Block Statment
+BlockStatement::BlockStatement(Token &token) : token{token} {}
+BlockStatement::BlockStatement(
+    Token &token, std::vector<std::unique_ptr<Statement>> &statements)
+    : token{token}, statements{std::move(statements)} {}
+void BlockStatement::statementNode() {}
+std::string BlockStatement::TokenLiteral() { return token.Literal; }
+std::string BlockStatement::String() {
+  std::string info{};
+  for (auto &&statement : statements) {
+    info += statement->String();
+  }
+  return info;
+}
+
+FunctionLiteral::FunctionLiteral(Token &token)
+    : token{token}, parameters{}, body{nullptr} {}
+void FunctionLiteral::expressionNode() {}
+std::string FunctionLiteral::TokenLiteral() { return token.Literal; }
+std::string FunctionLiteral::String() {
+  std::string info = token.Literal;
+  info += "(";
+  for (auto &&param : parameters) {
+    info += param->String();
+    info += ",";
+  }
+  info += ")";
+  if (body != nullptr) {
+    info += body->String();
+  }
+  return info;
+}

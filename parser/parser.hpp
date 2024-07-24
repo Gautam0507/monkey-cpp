@@ -54,6 +54,11 @@ public:
   std::unique_ptr<Expression> parseBoolean();
   std::unique_ptr<Expression>
   parseInfixExpression(std::unique_ptr<Expression> leftExpr);
+  std::unique_ptr<Expression> parseGroupedExpression();
+  std::unique_ptr<Expression> parseIfExpression();
+  std::unique_ptr<BlockStatement> parseBlockStatement();
+  std::unique_ptr<Expression> parseFunctionLiteral();
+  std::vector<std::unique_ptr<Identifier>> parseFunctionParameters();
 
   Precedence peekPrecedence();
   Precedence curPrecedence();
