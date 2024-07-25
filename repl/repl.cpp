@@ -1,5 +1,5 @@
 #include "../lexer/lexer.hpp"
-#include "../token/token.hpp"
+#include "../parser/parser.hpp"
 #include <cstdio>
 #include <istream>
 #include <ostream>
@@ -15,10 +15,17 @@ void Start(std::istream &input, std::ostream &output) {
       return;
     }
     Lexer l{line};
-    for (Token token{l.nextToken()}; token.Type != TokenTypes::EOF_;
-         token = l.nextToken()) {
-      output << "Token Type: " << token.Type << ", Literal: " << token.Literal
-             << "\n";
+    Parser p{&l};
+    auto program = p.parseProgram();
+    // Print the parsed program
+
+    output << "After Parser: " << program->String() << "\n";
+
+    if (p.getErrors().size() != 0) {
+      for (auto &&error : p.getErrors()) {
+        output << "\t" << error << "\n";
+      }
+      continue;
     }
   }
 }

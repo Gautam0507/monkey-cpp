@@ -59,6 +59,9 @@ std::string ReturnStatement::String() {
 }
 
 ExpressionStatement::ExpressionStatement(Token &t) : token{t} {}
+ExpressionStatement::ExpressionStatement(Token &t,
+                                         std::unique_ptr<Expression> e)
+    : token{t}, expression{std::move(e)} {}
 void ExpressionStatement::statementNode() {}
 std::string ExpressionStatement::TokenLiteral() { return token.Literal; }
 std::string ExpressionStatement::String() {
@@ -143,15 +146,32 @@ FunctionLiteral::FunctionLiteral(Token &token)
 void FunctionLiteral::expressionNode() {}
 std::string FunctionLiteral::TokenLiteral() { return token.Literal; }
 std::string FunctionLiteral::String() {
-  std::string info = token.Literal;
+  std::string info = TokenLiteral() + "(";
+
+  int i = 0;
+  for (; i < parameters.size() - 1; ++i) {
+    info += parameters[i]->String() + ", ";
+  }
+
+  info += parameters[i]->String() + ")";
+
+  return info;
+}
+callExpression::callExpression(Token &token)
+    : token{token}, function{nullptr} {}
+callExpression::callExpression(Token &token,
+                               std::unique_ptr<Expression> function)
+    : token{token}, function{std::move(function)}, arguments{} {}
+void callExpression::expressionNode() {}
+std::string callExpression::TokenLiteral() { return token.Literal; }
+std::string callExpression::String() {
+  std::string info{};
+  info += function->String();
   info += "(";
-  for (auto &&param : parameters) {
-    info += param->String();
-    info += ",";
+  int i = 0;
+  for (; i < arguments.size() - 1; ++i) {
+    info += arguments[i]->String() + ", ";
   }
-  info += ")";
-  if (body != nullptr) {
-    info += body->String();
-  }
+  info += arguments[i]->String() + ")";
   return info;
 }

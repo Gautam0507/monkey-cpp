@@ -69,6 +69,7 @@ public:
   Token token;
   std::unique_ptr<Expression> expression;
   ExpressionStatement(Token &);
+  ExpressionStatement(Token &, std::unique_ptr<Expression>);
 
   void statementNode() override;
   std::string TokenLiteral() override;
@@ -160,6 +161,18 @@ public:
   std::unique_ptr<BlockStatement> body;
 
   FunctionLiteral(Token &);
+  void expressionNode() override;
+  std::string TokenLiteral() override;
+  std::string String() override;
+};
+class callExpression : public Expression {
+public:
+  Token token;
+  std::unique_ptr<Expression> function;
+  std::vector<std::unique_ptr<Expression>> arguments;
+
+  callExpression(Token &);
+  callExpression(Token &, std::unique_ptr<Expression>);
   void expressionNode() override;
   std::string TokenLiteral() override;
   std::string String() override;

@@ -84,6 +84,9 @@ Parser::Parser(Lexer *l)
   registerInfix(
       std::string(TokenTypes::GT),
       std::bind(&Parser::parseInfixExpression, this, std::placeholders::_1));
+  registerInfix(
+      std::string(TokenTypes::LPAREN),
+      std::bind(&Parser::parseCallExpression, this, std::placeholders::_1));
 }
 
 void Parser::nextToken() {
@@ -105,9 +108,11 @@ std::unique_ptr<LetStatement> Parser::parseLetStatement() {
     return nullptr;
   }
 
-  // TODO: We're skipping the expressions until we encounter a semicolon
+  nextToken();
 
-  while (!curTokenIs(TokenTypes::SEMICOLON)) {
+  stmt->value = std::move(parseExpression(Precedence::LOWEST));
+
+  if (peekTokenIs(TokenTypes::SEMICOLON)) {
     nextToken();
   }
   return std::move(stmt);
@@ -383,4 +388,36 @@ std::vector<std::unique_ptr<Identifier>> Parser::parseFunctionParameters() {
   }
 
   return identifiers;
+}
+
+std::unique_ptr<Expression>
+Parser::parseCallExpression(std::unique_ptr<Expression> fn) {
+  std::unique_ptr<callExpression> exp =
+      std::make_unique<callExpression>(CurrentToken, std::move(fn));
+  exp->arguments = std::move(parseCallArguments());
+  return std::move(exp);
+}
+
+std::vector<std::unique_ptr<Expression>> Parser::parseCallArguments() {
+  std::vector<std::unique_ptr<Expression>> args;
+
+  if (peekTokenIs(TokenTypes::RPAREN)) {
+    nextToken();
+    return std::move(args);
+  }
+
+  nextToken();
+  args.push_back(std::move(parseExpression(Precedence::LOWEST)));
+
+  while (peekTokenIs(TokenTypes::COMMA)) {
+    nextToken();
+    nextToken();
+    args.push_back(std::move(parseExpression(Precedence::LOWEST)));
+  }
+
+  if (!expectPeek(TokenTypes::RPAREN)) {
+    return {};
+  }
+
+  return std::move(args);
 }

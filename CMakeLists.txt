@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.30)
-project(compiler LANGUAGES CXX)
+project(monkey LANGUAGES CXX)
 
 # Setting cxx min value  
 set(CMAKE_CXX_STANDARD 17)
@@ -19,6 +19,6 @@ add_subdirectory(./parser)
 add_subdirectory(./ast)
 
 # Commands for linking and compiling main.cpp 
-add_executable(compiler main.cpp)
-target_include_directories(compiler PRIVATE ./repl)
-target_link_libraries(compiler repl)
+add_executable(monkey main.cpp)
+target_include_directories(monkey PRIVATE ./repl)
+target_link_libraries(monkey repl)

@@ -59,6 +59,9 @@ public:
   std::unique_ptr<BlockStatement> parseBlockStatement();
   std::unique_ptr<Expression> parseFunctionLiteral();
   std::vector<std::unique_ptr<Identifier>> parseFunctionParameters();
+  std::unique_ptr<Expression>
+  parseCallExpression(std::unique_ptr<Expression> fn);
+  std::vector<std::unique_ptr<Expression>> parseCallArguments();
 
   Precedence peekPrecedence();
   Precedence curPrecedence();

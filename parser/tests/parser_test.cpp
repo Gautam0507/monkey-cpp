@@ -390,8 +390,9 @@ TEST(Parser, TestOperatorPrecedenceParsing) {
       {"2 / (5 + 5)", "(2 / (5 + 5))"},
       {"-(5 + 5)", "(-(5 + 5))"},
       {"!(true == true)", "(!(true == true))"},
-
-  };
+      {"a + add(b * c) + d", "((a + add((b * c))) + d)"},
+      {"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+       "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"}};
 
   for (auto &&test : tests) {
     Lexer l{test.input};
@@ -536,6 +537,156 @@ TEST(Parser, TestFunctionParameterParsing) {
     EXPECT_EQ(fn->parameters.size(), test.expectedParams.size());
     for (int i{0}; i < test.expectedParams.size(); i++) {
       EXPECT_EQ(fn->parameters[i]->value, test.expectedParams[i]);
+    }
+  }
+}
+
+TEST(Parser, TestCallExpressionParsing) {
+  std::string input{"add(1, 2 * 3, 4 + 5);"};
+  Lexer l{input};
+  Parser p{&l};
+
+  std::unique_ptr<Program> program = p.parseProgram();
+  EXPECT_NE(program, nullptr);
+  EXPECT_EQ(program->statements.size(), 1);
+
+  ExpressionStatement *stmt =
+      dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+  EXPECT_NE(stmt, nullptr);
+
+  callExpression *callExpr =
+      dynamic_cast<callExpression *>(stmt->expression.get());
+  EXPECT_NE(callExpr, nullptr);
+
+  Identifier *ident = dynamic_cast<Identifier *>(callExpr->function.get());
+  EXPECT_NE(ident, nullptr);
+  EXPECT_EQ(ident->value, "add");
+
+  EXPECT_EQ(callExpr->arguments.size(), 3);
+
+  if (!TestLiteralExpression(callExpr->arguments[0].get(), 1)) {
+    FAIL();
+  }
+
+  InfixExpression *infixExpr =
+      dynamic_cast<InfixExpression *>(callExpr->arguments[1].get());
+  EXPECT_NE(infixExpr, nullptr);
+  if (!TestLiteralExpression(infixExpr->left.get(), 2)) {
+    FAIL();
+  }
+  if (!TestLiteralExpression(infixExpr->right.get(), 3)) {
+    FAIL();
+  }
+
+  infixExpr = dynamic_cast<InfixExpression *>(callExpr->arguments[2].get());
+  EXPECT_NE(infixExpr, nullptr);
+  if (!TestLiteralExpression(infixExpr->left.get(), 4)) {
+    FAIL();
+  }
+  if (!TestLiteralExpression(infixExpr->right.get(), 5)) {
+    FAIL();
+  }
+}
+
+TEST(Parser, TestLetStatements) {
+  struct LetStatementTestsint {
+    std::string input;
+    std::string expectedIdentifier;
+    int expectedValue;
+  };
+  struct LetStatementTestsString {
+    std::string input;
+    std::string expectedIdentifier;
+    std::string expectedValue;
+  };
+  struct LetStatementTestsBool {
+    std::string input;
+    std::string expectedIdentifier;
+    bool expectedValue;
+  };
+
+  std::vector<LetStatementTestsint> testsInt = {
+      {"let x = 5;", "x", 5},
+      {"let y = 10;", "y", 10},
+      {"let foobar = 838383;", "foobar", 838383},
+  };
+
+  std::vector<LetStatementTestsString> testsString = {
+      {"let x = hello;", "x", "hello"},
+      {"let y = world;", "y", "world"},
+  };
+
+  std::vector<LetStatementTestsBool> testsBool = {
+      {"let x = true;", "x", true},
+      {"let y = false;", "y", false},
+  };
+
+  for (auto &&test : testsInt) {
+    Lexer l{test.input};
+    Parser p{&l};
+
+    std::unique_ptr<Program> program = p.parseProgram();
+    EXPECT_NE(program, nullptr);
+    EXPECT_EQ(program->statements.size(), 1);
+
+    ExpressionStatement *stmt =
+        dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+    EXPECT_NE(stmt, nullptr) << program->statements[0]->TokenLiteral();
+
+    LetStatement *letStmt =
+        dynamic_cast<LetStatement *>(stmt->expression.get());
+    EXPECT_NE(letStmt, nullptr);
+    EXPECT_EQ(letStmt->TokenLiteral(), "let");
+    EXPECT_EQ(letStmt->name->value, test.expectedIdentifier);
+    EXPECT_EQ(letStmt->name->TokenLiteral(), test.expectedIdentifier);
+    if (!TestLiteralExpression(letStmt->value.get(), test.expectedValue)) {
+      FAIL();
+    }
+  }
+
+  for (auto &&test : testsString) {
+    Lexer l{test.input};
+    Parser p{&l};
+
+    std::unique_ptr<Program> program = p.parseProgram();
+    EXPECT_NE(program, nullptr);
+    EXPECT_EQ(program->statements.size(), 1);
+
+    ExpressionStatement *stmt =
+        dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+    EXPECT_NE(stmt, nullptr);
+
+    LetStatement *letStmt =
+        dynamic_cast<LetStatement *>(stmt->expression.get());
+    EXPECT_NE(letStmt, nullptr);
+    EXPECT_EQ(letStmt->TokenLiteral(), "let");
+    EXPECT_EQ(letStmt->name->value, test.expectedIdentifier);
+    EXPECT_EQ(letStmt->name->TokenLiteral(), test.expectedIdentifier);
+    if (!TestLiteralExpression(letStmt->value.get(), test.expectedValue)) {
+      FAIL();
+    }
+  }
+
+  for (auto &&test : testsBool) {
+    Lexer l{test.input};
+    Parser p{&l};
+
+    std::unique_ptr<Program> program = p.parseProgram();
+    EXPECT_NE(program, nullptr);
+    EXPECT_EQ(program->statements.size(), 1);
+
+    ExpressionStatement *stmt =
+        dynamic_cast<ExpressionStatement *>(program->statements[0].get());
+    EXPECT_NE(stmt, nullptr);
+
+    LetStatement *letStmt =
+        dynamic_cast<LetStatement *>(stmt->expression.get());
+    EXPECT_NE(letStmt, nullptr);
+    EXPECT_EQ(letStmt->TokenLiteral(), "let");
+    EXPECT_EQ(letStmt->name->value, test.expectedIdentifier);
+    EXPECT_EQ(letStmt->name->TokenLiteral(), test.expectedIdentifier);
+    if (!TestLiteralExpression(letStmt->value.get(), test.expectedValue)) {
+      FAIL();
     }
   }
 }
