@@ -34,7 +34,7 @@ void Start(std::istream &input, std::ostream &output) {
     Parser p{&l};
     auto program = p.parseProgram();
     // Print the parsed program
-    output << "After Parser: " << program->String() << "\n";
+    output << program->String() << "\n";
 
     if (p.getErrors().size() != 0) {
       for (auto &&error : p.getErrors()) {

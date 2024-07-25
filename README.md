@@ -42,21 +42,23 @@ To build and run this project, you need:
 
 2. Build the project using your preferred method:
 
-   **Using CMake:**
+Note: need C++ 17 to compile the project
 
-   ```bash
-   mkdir build
-   cd build
-   cmake ..
-   make
-   ```
+**Using CMake:**
 
-   **Using a direct compiler command:**
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
 
-   ```bash
-   g++ main.cpp ast/ast.cpp lexer/lexer.cpp parser/parser.cpp repl/repl.cpp token/token.cpp
-   ./a.out
-   ```
+**Using a direct compiler command:**
+
+```bash
+g++ -std=c++17 main.cpp ast/ast.cpp lexer/lexer.cpp parser/parser.cpp repl/repl.cpp token/token.cpp
+./a.out
+```
 
 ### Running the Compiler
 
