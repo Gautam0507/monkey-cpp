@@ -1,5 +1,5 @@
 #include "ast.hpp"
-#include "token.hpp"
+#include "../token/token.hpp"
 #include <string>
 
 std::string Program::TokenLiteral() {
@@ -154,6 +154,11 @@ std::string FunctionLiteral::String() {
   }
 
   info += parameters[i]->String() + ")";
+  info += "{";
+  if (body != nullptr) {
+    info += body->String();
+  }
+  info += "}";
 
   return info;
 }

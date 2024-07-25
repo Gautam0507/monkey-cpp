@@ -1,6 +1,7 @@
 #include "parser.hpp"
-#include "ast.hpp"
-#include "token.hpp"
+#include "../ast/ast.hpp"
+#include "../lexer/lexer.hpp"
+#include "../token/token.hpp"
 #include <memory>
 #include <string>
 #include <string_view>

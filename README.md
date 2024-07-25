@@ -7,6 +7,7 @@ This project is an implementation of a compiler for the Monkey Toy Programming L
 ## Current Progress
 
 I have currently completed the Lexer Parser section of the compiler and am working on the Evaluation part.
+The parser is currently working with operator precedence.
 
 ## Project Structure
 
@@ -18,7 +19,9 @@ I have currently completed the Lexer Parser section of the compiler and am worki
 
 ## Getting Started
 
-Download the release from the releases section and run the executable.
+### Running the Compiler
+
+Download the release from the releases section and run the executable or build the project using the instructions below.
 
 ### Prerequisites
 
@@ -51,7 +54,8 @@ To build and run this project, you need:
    **Using a direct compiler command:**
 
    ```bash
-   g++ -o monkey main.cpp lexer.cpp parser.cpp
+   g++ main.cpp ast/ast.cpp lexer/lexer.cpp parser/parser.cpp repl/repl.cpp token/token.cpp
+   ./a.out
    ```
 
 ### Running the Compiler
@@ -60,4 +64,18 @@ After building the project, you can run the compiler using:
 
 ```bash
 ./monkey
+```
+
+## Commands to test out the working of the compiler
+
+```
+let x = 5;
+let y = 10;
+fn(a,b)
+let x = 1 * 2 * 3 * 4 * 5
+x * y / 2 + 3 * 8 - 123
+true == false
+if (x ==5) {return 5;}
+if (x == 5) {return 5;} else {return 10;}
+let x = fn(a,b) {return a + b;}
 ```
