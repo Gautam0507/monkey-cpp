@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This project is an implementation of a compiler for the Monkey Toy Programming Language, based on the book "Crafting Interpreters" by Thorsten Ball. The goal of this project is to understand the inner workings of a compiler by building one from scratch.
+This project is an implementation of a compiler for the Monkey Toy Programming Language, based on the book "Writing an Interpreter in GO" and "Writing a Compiler in GO" by Thorsten Ball. The goal of this project is to understand the inner workings of a compiler by building one from scratch.
 
 ## Current Progress
 
